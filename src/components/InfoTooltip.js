@@ -6,11 +6,11 @@ function InfoTooltip({ isOpen, onClose, title, image }) {
       <div className="popup__container">
         <button
           type="button"
-					aria-label="Закрыть"
+          aria-label="Закрыть"
           className="popup__close popup__close_register link"
           onClick={onClose}
         />
-        <img className="popup__status-img" src={image} alt="" />
+        <img className="popup__status-img" src={image} alt="изображение состояния" />
         <h2 className="popup__status-text">{title}</h2>
       </div>
     </div>

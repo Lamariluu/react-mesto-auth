@@ -42,21 +42,20 @@ function App() {
 
   const navigate = useNavigate();
 
+
   useEffect(() => {
+    if (isLoggedIn === true) {
+      navigate("/");
+    }
+  }, [isLoggedIn, navigate]);
+
+  useEffect(() => {
+    if (isLoggedIn === false) {
+      return;
+    }
     api.getUserInfo()
       .then(profileData => setCurrentUser(profileData))
       .catch(err => console.log(err))
-
-    //api.getInitialCards()
-    //  .then(cardData => {
-    //    setCards(cardData.map((card) => ({
-    //      id: card.id,
-    //      name: card.name,
-    //      link: card.link,
-    //      likes: card.likes,
-    //      owner: card.owner,
-    //    })));
-    //  })
     api
       .getInitialCards()
       .then((cardData) => {
@@ -64,8 +63,7 @@ function App() {
       })
       .catch(err => console.log(err))
   },
-    []);
-
+    [isLoggedIn]);
 
   function onRegister(email, password) {
     auth

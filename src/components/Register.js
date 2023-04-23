@@ -14,7 +14,7 @@ function Register(props) {
 		setPassword(evt.target.value);
 	}
 
-  const handleSubmit = (evt) => {
+	const handleSubmit = (evt) => {
 		evt.preventDefault();
 		props.onRegister(email, password);
 	}
@@ -27,7 +27,6 @@ function Register(props) {
 					name="register"
 					id="register-form"
 					onSubmit={handleSubmit}
-					noValidate
 				>
 					<h2 className="register__title">Регистрация</h2>
 					<input

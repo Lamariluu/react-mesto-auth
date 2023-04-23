@@ -15,7 +15,7 @@ export function registerUser(email, password) {
     },
     body: JSON.stringify({ email, password }),
   })
-  .then(checkResponse);
+    .then(checkResponse);
 };
 
 export function loginUser(email, password) {
@@ -26,7 +26,7 @@ export function loginUser(email, password) {
     },
     body: JSON.stringify({ email, password }),
   })
-  .then(checkResponse);
+    .then(checkResponse);
 };
 
 export function getToken(jwt) {
@@ -37,5 +37,5 @@ export function getToken(jwt) {
       Authorization: `Bearer ${jwt}`,
     },
   })
-  .then(checkResponse);
+    .then(checkResponse);
 };
