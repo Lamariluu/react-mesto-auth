@@ -1,7 +1,7 @@
 import React from "react";
 import logo from "../images/logo-white.svg";
 
-function Header() {
+function Header(props) {
   return (
     <header className="header">
       <img
@@ -9,6 +9,10 @@ function Header() {
         alt="логотип сайта место россия"
         src={logo}
       />
+      <div className="header__auth">
+        <p>{props.mail}</p>
+        <p onClick={props.onClick} className="link">{props.title}</p>
+      </div>
     </header>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Header from './Header';
 import Footer from './Footer';
 import Main from './Main';
@@ -10,6 +11,16 @@ import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddPlacePopup from './AddPlacePopup';
 
+import ConfirmDeletePopup from './ConfirmDeletePopup';
+import * as auth from '../utils/Auth';
+import Register from './Register';
+import Login from './Login';
+import ProtectedRoute from './ProtectedRoute';
+import InfoTooltip from './InfoTooltip';
+
+import resolve from '../images/right.svg';
+import reject from '../images/wrong.svg';
+
 
 function App() {
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
@@ -20,6 +31,16 @@ function App() {
   const [currentUser, setCurrentUser] = useState({});
   const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [selectCardDelete, setSelectCardDelete] = useState({});
+  const [isDeleteCardPopupOpen, setIsDeleteCardPopupOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [emailName, setEmailName] = useState(null);
+  const [popupImage, setPopupImage] = useState("");
+  const [popupTitle, setPopupTitle] = useState("");
+  const [infoTooltip, setInfoTooltip] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.getUserInfo()
@@ -45,11 +66,75 @@ function App() {
   },
     []);
 
+
+  function onRegister(email, password) {
+    auth
+      .registerUser(email, password)
+      .then(() => {
+        setPopupImage(resolve);
+        setPopupTitle("Вы успешно зарегистрировались!");
+        navigate("/sign-in");
+      })
+      .catch(() => {
+        setPopupImage(reject);
+        setPopupTitle("Что-то пошло не так! Попробуйте ещё раз.");
+      })
+      .finally(handleInfoTooltip);
+  }
+
+  function onLogin(email, password) {
+    auth
+      .loginUser(email, password)
+      .then((res) => {
+        localStorage.setItem("jwt", res.token);
+        setIsLoggedIn(true);
+        setEmailName(email);
+        navigate("/");
+      })
+      .catch(() => {
+        setPopupImage(reject);
+        setPopupTitle("Что-то пошло не так! Попробуйте ещё раз.");
+        handleInfoTooltip();
+      });
+  }
+
+  function onSignOut() {
+    setIsLoggedIn(false);
+    setEmailName(null);
+    navigate("/sign-in");
+    localStorage.removeItem("jwt");
+  }
+
+  // ПОСЛЕ ПЕРЕЗАГРУЗКИ СТРАНИЦЫ, НЕ ТРЕБУЕТСЯ АВТОРИЗАЦИЯ
+  useEffect(() => {
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
+      auth
+        .getToken(jwt)
+        .then((res) => {
+          console.log({ res })
+          if (res) {
+            setIsLoggedIn(true);
+            setEmailName(res.data.email);
+            navigate("/");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
+  }, []);
+
+  function handleInfoTooltip() {
+    setInfoTooltip(true);
+  }
+
   const closeAllPopups = () => {
     setIsEditAvatarPopupOpen(false);
     setIsAddPlacePopupOpen(false);
     setIsEditProfilePopupOpen(false);
     setSelectedCard({});
+    setInfoTooltip(false);
   };
 
   const handleCardLike = (card) => {
@@ -113,17 +198,41 @@ function App() {
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
         <div className="page__container">
-          <Header />
-          <Main
-            cards={cards}
-            onEditAvatar={setIsEditAvatarPopupOpen}
-            onEditProfile={setIsEditProfilePopupOpen}
-            onAddPlace={setIsAddPlacePopupOpen}
-            onCardClick={setSelectedCard}
-            onCardLike={handleCardLike}
-            onCardDelete={handleCardDelete}
-          />
-          <Footer />
+          <Routes>
+            <Route path="/sign-in" element={
+              <>
+                <Header title="Регистрация" onClick={() => { navigate("/sign-up") }} />
+                <Login onLogin={onLogin} />
+              </>
+            } />
+
+            <Route path="/sign-up" element={
+              <>
+                <Header title="Войти" onClick={() => { navigate("/sign-in") }} />
+
+                <Register onRegister={onRegister} />
+              </>
+            } />
+
+            <Route exact path="/" element={
+              <>
+                <Header title="Выйти" mail={emailName} onClick={onSignOut} route="" />
+                <ProtectedRoute
+                  isLogged={isLoggedIn}
+                  cards={cards}
+                  component={Main}
+                  onEditAvatar={setIsEditAvatarPopupOpen}
+                  onEditProfile={setIsEditProfilePopupOpen}
+                  onAddPlace={setIsAddPlacePopupOpen}
+                  onCardClick={setSelectedCard}
+                  onCardLike={handleCardLike}
+                  onCardDelete={handleCardDelete}
+                />
+                <Footer />
+              </>
+            } />
+            <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/sign-in"} />} />
+          </Routes>
 
           <EditProfilePopup
             isOpen={isEditProfilePopupOpen}
@@ -153,6 +262,13 @@ function App() {
             onClose={closeAllPopups}
             onLoading={isLoading}
           ></AddPlacePopup>
+
+          <InfoTooltip
+            image={popupImage}
+            title={popupTitle}
+            isOpen={infoTooltip}
+            onClose={closeAllPopups}
+          />
 
           <ImagePopup
             card={selectedCard}
